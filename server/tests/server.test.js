@@ -128,3 +128,22 @@ describe("Delete/todos/:id",()=>{
       .end(done);
   });
 })
+
+describe('PATCH /todos/:id',()=>{
+  it('should update the todo',(done)=>{
+    var id = todos[0]._id.toHexString()
+    var text ="This should be the new text"
+    request(app)
+      .patch(`/todos/${id}`)
+      .send({
+        Completed:true,
+        text
+      })
+      .expect(200)
+      .expect((res)=>{
+        expect(res.body.todo.text).toBe(text)
+        expect(res.body.todo.Completed).toBe(true)
+        expect(res.body.todo.CompletedAt).toBe('number')
+      }).end(done)
+  })
+})

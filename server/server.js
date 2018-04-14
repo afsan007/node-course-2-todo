@@ -1,3 +1,4 @@
+require('./config/config')
 const express =require("express")
 const bodyParser = require("body-parser")
 const  _ =require("lodash")
@@ -5,11 +6,9 @@ const {ObjectID}= require("mongodb")
 const {mongoose} =require("./db/mongoose")
 const {Todo} =require("./models/todo")
 const {User} =require("./models/user")
-
 const app = express();
-
+const port = process.env.PORT;
 app.use(bodyParser.json())
-
 app.post('/todos',(req,res)=>{
   var Tdo = new Todo({
     text:req.body.text
@@ -67,11 +66,11 @@ app.patch('/todos/:id',(req,res)=>{
   if(!ObjectID.isValid(id)){
     return res.status(404).send("is 1")
   }
-  if(_.isBoolean(body.Completed) && body.completed){
+  if(_.isBoolean(body.Completed) && body.Completed){
     body.CompletedAt = new Date().getTime()
   }else{
     body.CompletedAt=null
-    body.completed = false
+    body.Completed = false
   }
   Todo.findByIdAndUpdate(id, {$set:body}, {new:true}).then((todo)=>{
     if(!todo){
@@ -80,6 +79,7 @@ app.patch('/todos/:id',(req,res)=>{
     res.send({todo})
   }).catch((e)=>{res.status(400).send()})
 })
+
 
 app.listen(3000, () => {
   console.log("Started on port 3000")
