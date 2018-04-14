@@ -27,8 +27,8 @@ app.get("/todos",(req,res)=>{
   Todo.find().then( (todos) => {
     res.send({todos})
   },(e) => {
-    res.status(400).send(e);
-  })
+      res.status(400).send(e);
+    })
 })
 
 app.get("/todos/:id",(req,res)=>{
@@ -39,14 +39,25 @@ app.get("/todos/:id",(req,res)=>{
   }
 
   Todo.findById(id).then((doc)=>{
-    if(!doc){
-       return res.status(404).send("is 2")
-    }
-       res.send({doc})
-}).catch((e)=>{
-  res.status(400).send("is 3")
-})
+    if(!doc){ return res.status(404).send("is 2") }
+    res.send({doc})
 
+  }).catch((e)=>{
+        res.status(400).send("is 3")
+     })
+})
+app.delete('/todos/:id',(req,res)=>{
+  var id = req.params.id
+  if(!ObjectID.isValid(id)){
+    return res.status(404).send("ID Is Not Valid.")
+  }
+  Todo.findByIdAndRemove(id).then((todo)=>{
+    if(!todo){
+        return res.status(404).send("ID Is Not found.")
+    }
+    res.status(200).send(todo)
+
+  }).catch((e)=>{ return res.status(404).send("Error occured!!")})
 })
 
 app.listen(3000, () => {
