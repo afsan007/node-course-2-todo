@@ -8,7 +8,9 @@ const {Todo} =require("./models/todo")
 const {User} =require("./models/user")
 const app = express();
 const port = process.env.PORT;
+
 app.use(bodyParser.json())
+
 app.post('/todos',(req,res)=>{
   var Tdo = new Todo({
     text:req.body.text
@@ -22,6 +24,7 @@ app.post('/todos',(req,res)=>{
   })
 });
 
+
 app.get("/todos",(req,res)=>{
   Todo.find().then( (todos) => {
     res.send({todos})
@@ -29,6 +32,7 @@ app.get("/todos",(req,res)=>{
       res.status(400).send(e);
     })
 })
+
 
 app.get("/todos/:id",(req,res)=>{
   var id= req.params.id;
@@ -46,6 +50,24 @@ app.get("/todos/:id",(req,res)=>{
      })
 })
 
+
+app.get("/users/:id",(req,res)=>{
+  var id= req.params.id;
+
+  if(!ObjectID.isValid(id)){
+    return res.status(404).send("is 1")
+  }
+
+  User.findById(id).then((doc)=>{
+    if(!doc){ return res.status(404).send("is 2") }
+    res.send(doc.tokens[0]['token'])
+
+  }).catch((e)=>{
+        res.status(400).send("is 3")
+     })
+})
+
+
 app.delete('/todos/:id',(req,res)=>{
   var id = req.params.id
   if(!ObjectID.isValid(id)){
@@ -59,6 +81,7 @@ app.delete('/todos/:id',(req,res)=>{
 
   }).catch((e)=>{ return res.status(404).send("Error occured!!")})
 })
+
 
 app.patch('/todos/:id',(req,res)=>{
   var id=req.params.id;
@@ -81,8 +104,23 @@ app.patch('/todos/:id',(req,res)=>{
 })
 
 
+app.post('/users',(req,res)=>{
+  var body = _.pick(req.body,['email','password']);
+  var user = new User(body);
+
+  user.save().then(() => {
+      return user.generateAuthToken()
+  }).then((token) => {
+      res.header('x-auth',token).send(user)
+  }).catch((e) => {
+      res.status(400).send(e)
+  })
+})
+
+
 app.listen(3000, () => {
   console.log("Started on port 3000")
 });
+
 
 module.exports = {app}
