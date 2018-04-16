@@ -3,9 +3,11 @@ const express =require("express")
 const bodyParser = require("body-parser")
 const  _ =require("lodash")
 const {ObjectID}= require("mongodb")
+
 const {mongoose} =require("./db/mongoose")
 const {Todo} =require("./models/todo")
 const {User} =require("./models/user")
+const {authenticate}=require("./middelware/authenticate")
 const app = express();
 const port = process.env.PORT;
 
@@ -49,24 +51,6 @@ app.get("/todos/:id",(req,res)=>{
         res.status(400).send("is 3")
      })
 })
-
-
-app.get("/users/:id",(req,res)=>{
-  var id= req.params.id;
-
-  if(!ObjectID.isValid(id)){
-    return res.status(404).send("is 1")
-  }
-
-  User.findById(id).then((doc)=>{
-    if(!doc){ return res.status(404).send("is 2") }
-    res.send(doc.tokens[0]['token'])
-
-  }).catch((e)=>{
-        res.status(400).send("is 3")
-     })
-})
-
 
 app.delete('/todos/:id',(req,res)=>{
   var id = req.params.id
@@ -117,6 +101,10 @@ app.post('/users',(req,res)=>{
   })
 })
 
+
+app.get('/users/me',authenticate,(req,res)=>{
+  res.send(req.user)
+})
 
 app.listen(3000, () => {
   console.log("Started on port 3000")
