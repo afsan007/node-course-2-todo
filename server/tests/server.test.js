@@ -5,7 +5,7 @@ const {ObjectID}=require('mongodb')
 const {app} = require('./../server')
 const {Todo} = require('./../models/todo')
 const {User} = require('./../models/user')
-const {todos,populateTodos,users,populateUsers} = require('./seed/seed')
+const {todos, populateTodos, users, populateUsers} = require('./seed/seed')
 
 beforeEach(populateUsers);
 beforeEach(populateTodos);
@@ -180,15 +180,59 @@ describe('POST/users', () => {
       }
       User.findOne({email}).then((user)=>{
         expect(user).toBeTruthy();
-        expect(user.password).toNotBe(password)
+        // expect(user.password).toNotBe(password)
         done()
       })
     })
   })
-  // it("should return validation errors if request invaild",(done)=>{
-  //
-  // })
-  // it("shoulf not create user if email in use",()=>{
-  //
-  // })
 });
+describe("POST/user/login",()=>{
+  it("should login user and return auth token",(done)=>{
+  var email = users[1].email
+  var password =users[1].password
+    request(app)
+    .post('/users/login')
+    .send({
+      email: email,
+      password: password
+    })
+    .expect(200)
+    .expect((res)=>{
+      expect(res.headers['x-auth']).toBeTruthy()
+    })
+    .end((err,res)=>{
+      if(err){
+        return done(err)
+      }
+      User.findById(users[1]._id).then((user)=>{
+        expect(user.tokens[0]).toInclude({
+          access:'auth'
+        ,token:res.headers['x-auth']
+        })
+        done()
+      }).catch((e)=>done(e))
+    })
+  })
+  it('should reject invalid login', (done) => {
+    request(app)
+      .post('/users/login')
+      .send({
+        email: users[1].email,
+        password: users[1].password + '1asd46'
+      })
+      .expect(400)
+      .expect((res) => {
+        expect(res.headers['x-auth']).toNotExist();
+      })
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+
+        User.findById(users[1]._id).then((user) => {
+          expect(user.tokens.length).toBe(0);
+          done();
+        }).catch((e) => done(e));
+      });
+  });
+})
